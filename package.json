@@ -1,0 +1,25 @@
+﻿{
+    "name":  "time-capsule",
+    "version":  "1.0.0",
+    "description":  "Капсула времени: страница с видео, таймерами и зашифрованным хранилищем",
+    "directories":  {
+                        "doc":  "docs"
+                    },
+    "scripts":  {
+                    "test":  "node tools/test_capsule.js",
+                    "seal":  "node tools/seal_vault.js",
+                    "video":  "node tools/compress_video.js",
+                    "qr":  "node tools/make_qr.js",
+                    "sample":  "node tools/make_sample.js",
+                    "serve":  "python -m http.server 8765 --directory docs"
+                },
+    "keywords":  [
+
+                 ],
+    "author":  "",
+    "license":  "ISC",
+    "dependencies":  {
+                         "ffmpeg-static":  "^5.3.0",
+                         "qrcode":  "^1.5.4"
+                     }
+}

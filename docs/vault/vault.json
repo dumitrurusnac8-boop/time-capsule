@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "cipher": "AES-GCM",
+  "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 600000,
+    "salt": "efYgKSHRzBappzlvhj0uCA=="
+  },
+  "manifest": "manifest.bin",
+  "files": [
+    {
+      "id": "f001.bin",
+      "size": 347
+    },
+    {
+      "id": "f002.bin",
+      "size": 11487
+    },
+    {
+      "id": "f003.bin",
+      "size": 13945
+    },
+    {
+      "id": "f004.bin",
+      "size": 9982
+    },
+    {
+      "id": "f005.bin",
+      "size": 9427
+    },
+    {
+      "id": "f006.bin",
+      "size": 12406
+    },
+    {
+      "id": "f007.bin",
+      "size": 10736
+    },
+    {
+      "id": "f008.bin",
+      "size": 317921
+    }
+  ]
+}
