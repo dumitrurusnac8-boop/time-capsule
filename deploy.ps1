@@ -17,24 +17,35 @@ if (-not (Test-Path ".git")) { git init -b main | Out-Null }
 git add -A
 git commit -m "Капсула времени" --quiet 2>$null | Out-Null
 
-$exists = $true
-try { gh repo view "$login/$repo" --json name | Out-Null } catch { $exists = $false }
+# Именно код возврата, а не try/catch: ненулевой код внешней программы
+# не является терминирующей ошибкой, и catch по нему не срабатывает.
+gh repo view "$login/$repo" --json name 2>$null | Out-Null
+$exists = ($LASTEXITCODE -eq 0)
 
 if (-not $exists) {
+  Write-Host "Репозитория $login/$repo нет, создаю."
+  if (git remote | Select-String -Quiet "^origin$") { git remote remove origin }
   gh repo create $repo --public --source . --remote origin --push
+  if ($LASTEXITCODE -ne 0) { throw "не удалось создать репозиторий" }
 } else {
+  Write-Host "Репозиторий $login/$repo уже есть, отправляю изменения."
   if (-not (git remote | Select-String -Quiet "^origin$")) {
     git remote add origin "https://github.com/$login/$repo.git"
   }
   git push -u origin main
+  if ($LASTEXITCODE -ne 0) { throw "не удалось отправить изменения" }
 }
 
 # Включить Pages из папки /docs. Если уже включено, GitHub отвечает 409, это не ошибка.
 $tmp = Join-Path $env:TEMP "pages-source.json"
 '{"source":{"branch":"main","path":"/docs"}}' | Out-File $tmp -Encoding ascii -NoNewline
-$pagesOk = $true
-try { gh api -X POST "repos/$login/$repo/pages" --input $tmp 2>&1 | Out-Null } catch { $pagesOk = $false }
+gh api -X POST "repos/$login/$repo/pages" --input $tmp 2>$null | Out-Null
+$pagesCode = $LASTEXITCODE
 Remove-Item $tmp -ErrorAction SilentlyContinue
+
+gh api "repos/$login/$repo/pages" --jq ".status" 2>$null | Out-Null
+$pagesOn = ($LASTEXITCODE -eq 0)
+if (-not $pagesOn) { Write-Host "Pages включить не удалось (код $pagesCode). Проверь Settings, раздел Pages." }
 
 $url = "https://$login.github.io/$repo/"
 
@@ -55,6 +66,5 @@ if ($live) {
 } else {
   Write-Host "Адрес: $url"
   Write-Host "Сборка ещё идёт. Состояние: gh api repos/$login/$repo/pages --jq .status"
-  if (-not $pagesOk) { Write-Host "Pages включить не удалось. Проверь Settings, раздел Pages." }
 }
 Write-Host "QR-код делается после того, как адрес открылся:  npm run qr -- $url"
