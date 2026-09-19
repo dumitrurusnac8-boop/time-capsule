@@ -2,33 +2,35 @@
 # Первый запуск создаёт публичный репозиторий time-capsule и включает Pages из папки /docs.
 # Повторные запуски просто отправляют изменения.
 #
-# ВАЖНО: файл обязан лежать в UTF-8 С BOM. Без BOM PowerShell 5.1 читает его
-# в системной кодировке, кириллица ломается, и скрипт не разбирается парсером.
+# ВАЖНО, два правила этого файла:
+#  * он обязан лежать в UTF-8 С BOM, иначе PowerShell 5.1 не разберёт кириллицу;
+#  * успех внешних программ проверяется ТОЛЬКО по $LASTEXITCODE. try/catch их
+#    неудачу не ловит, а перенаправление 2>$null наоборот делает из обычного
+#    сообщения stderr терминирующую ошибку.
 
-$ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
 $repo = "time-capsule"
 $login = (gh api user --jq ".login")
-if (-not $login) { throw "gh не залогинен: выполни gh auth login" }
+if ($LASTEXITCODE -ne 0 -or -not $login) { throw "gh не залогинен: выполни gh auth login" }
 
 if (-not (Test-Path ".git")) { git init -b main | Out-Null }
 
 git add -A
-git commit -m "Капсула времени" --quiet 2>$null | Out-Null
+git commit -m "Капсула времени" --quiet | Out-Null
 
-# Именно код возврата, а не try/catch: ненулевой код внешней программы
-# не является терминирующей ошибкой, и catch по нему не срабатывает.
-gh repo view "$login/$repo" --json name 2>$null | Out-Null
+Write-Host "Проверяю, есть ли репозиторий $login/$repo. Строка GraphQL ниже, если она есть, означает просто 'ещё нет'."
+gh repo view "$login/$repo" --json name | Out-Null
 $exists = ($LASTEXITCODE -eq 0)
 
 if (-not $exists) {
-  Write-Host "Репозитория $login/$repo нет, создаю."
+  Write-Host ""
+  Write-Host "Создаю публичный репозиторий $login/$repo."
   if (git remote | Select-String -Quiet "^origin$") { git remote remove origin }
   gh repo create $repo --public --source . --remote origin --push
   if ($LASTEXITCODE -ne 0) { throw "не удалось создать репозиторий" }
 } else {
-  Write-Host "Репозиторий $login/$repo уже есть, отправляю изменения."
+  Write-Host "Репозиторий уже есть, отправляю изменения."
   if (-not (git remote | Select-String -Quiet "^origin$")) {
     git remote add origin "https://github.com/$login/$repo.git"
   }
@@ -39,13 +41,15 @@ if (-not $exists) {
 # Включить Pages из папки /docs. Если уже включено, GitHub отвечает 409, это не ошибка.
 $tmp = Join-Path $env:TEMP "pages-source.json"
 '{"source":{"branch":"main","path":"/docs"}}' | Out-File $tmp -Encoding ascii -NoNewline
-gh api -X POST "repos/$login/$repo/pages" --input $tmp 2>$null | Out-Null
-$pagesCode = $LASTEXITCODE
+gh api -X POST "repos/$login/$repo/pages" --input $tmp | Out-Null
 Remove-Item $tmp -ErrorAction SilentlyContinue
 
-gh api "repos/$login/$repo/pages" --jq ".status" 2>$null | Out-Null
-$pagesOn = ($LASTEXITCODE -eq 0)
-if (-not $pagesOn) { Write-Host "Pages включить не удалось (код $pagesCode). Проверь Settings, раздел Pages." }
+$pagesStatus = (gh api "repos/$login/$repo/pages" --jq ".status")
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "Pages включить не удалось. Открой Settings, раздел Pages, и поставь ветку main, папку /docs."
+} else {
+  Write-Host "Pages включён, состояние: $pagesStatus"
+}
 
 $url = "https://$login.github.io/$repo/"
 
