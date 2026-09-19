@@ -56,7 +56,7 @@ function main() {
   console.log(`Обложка: ${path.resolve(poster)}`);
   if (m) {
     const w = +m[1], h = +m[2];
-    console.log(`Кадр ${w}x${h}. В docs/config.js поставь videoAspect: "${w} / ${h}"`);
+    console.log(`Кадр ${w}x${h}. В docs/config.js поставь videoWidth: ${w}, videoHeight: ${h}`);
   }
   if (mib > 100) console.log("ВНИМАНИЕ: больше 100 MiB, GitHub такой файл не примет. Подними --crf до 28 или --max до 960.");
   else if (mib > 50) console.log("Больше 50 MiB: GitHub предупредит, но примет. Можно поднять --crf до 26.");

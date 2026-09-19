@@ -10,8 +10,10 @@ window.CAPSULE_CONFIG = {
   // Видеопослание. Файл кладётся рядом с index.html.
   video: "video.mp4",
   poster: "poster.jpg",
-  // Форма кадра до загрузки видео: "16 / 9" для горизонтального, "9 / 16" для вертикального.
-  videoAspect: "16 / 9",
+  // Размер кадра в пикселях — его печатает tools/compress_video.js.
+  // Нужен, чтобы место под видео было верным ещё до загрузки файла.
+  videoWidth: 720,
+  videoHeight: 1280,
 
   // Папка с зашифрованным хранилищем (её создаёт tools/seal_vault.js).
   vaultDir: "vault",

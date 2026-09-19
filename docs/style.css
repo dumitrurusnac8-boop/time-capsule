@@ -124,9 +124,14 @@
   }
 
   .film video {
+    /* Ширину задаёт сам кадр: вертикальное видео не растягивается
+       на всю колонку и не обрастает чёрными полями по бокам. */
+    --video-w: 16;
+    --video-h: 9;
+    --video-max-h: 78dvh;
     width: 100%;
-    max-height: 82dvh;
-    aspect-ratio: var(--video-aspect, 16 / 9);
+    max-width: calc(var(--video-max-h) * var(--video-w) / var(--video-h));
+    aspect-ratio: var(--video-w) / var(--video-h);
     background: #000;
     border-radius: var(--radius);
     border: 1px solid var(--brass-line);

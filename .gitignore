@@ -4,3 +4,7 @@ out/
 sample/
 vault-src/
 *.log
+
+# Исходник видео до сжатия: на сайт едет только docs/video.mp4
+*-original.mp4
+*-original.mov

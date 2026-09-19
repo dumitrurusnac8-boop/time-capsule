@@ -176,18 +176,22 @@
 
   // Видео.
   const video = $("greeting");
-  if (C.videoAspect) video.style.setProperty("--video-aspect", C.videoAspect);
+
+  function setFrame(w, h) {
+    if (!w || !h) return;
+    video.style.setProperty("--video-w", String(w));
+    video.style.setProperty("--video-h", String(h));
+  }
+
+  setFrame(C.videoWidth, C.videoHeight);
   if (C.poster) video.poster = C.poster;
   const source = document.createElement("source");
   source.src = C.video || "video.mp4";
   source.type = "video/mp4";
   video.prepend(source);
   $("video-link").href = source.src;
-  video.addEventListener("loadedmetadata", () => {
-    if (video.videoWidth && video.videoHeight) {
-      video.style.setProperty("--video-aspect", `${video.videoWidth} / ${video.videoHeight}`);
-    }
-  });
+  // Настоящий размер кадра побеждает настройку, если они разошлись.
+  video.addEventListener("loadedmetadata", () => setFrame(video.videoWidth, video.videoHeight));
 
   // Режим просмотра: #open показывает открытое хранилище до срока, #sealed прячет его после.
   function isOpenNow(now) {
